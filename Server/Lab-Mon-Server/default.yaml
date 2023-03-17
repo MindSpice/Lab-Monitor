@@ -1,0 +1,23 @@
+---
+port: 10152
+isNUTMonitor: true
+clientPollRate: 30
+nutPollRate: 20
+nutHostAddr: "192.168.1.165"
+nutHostPort: 3493
+nutDevice: "eaton"
+nutUser: "admin"
+nutPass: "powerpass"
+nutRuntimeVar: "battery.runtime"
+nutChargeVar: "battery.charge"
+nutStatusVar: "ups.status"
+nutOnlineVal: "OL"
+nutReplaceBatVal: "RB"
+nutPowerDrawVar: "ups.realpower"
+nutLoadVar: "ups.load"
+nutOutputVar: "output.voltage"
+nutInputVar: "input.voltage"
+nutTempVar: "ups.temperature"
+nutTestVar: "ups.test.result"
+nutHistorySize: 120
+clientHistorySize: 240

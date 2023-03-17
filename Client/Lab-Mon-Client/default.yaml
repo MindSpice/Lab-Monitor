@@ -1,0 +1,34 @@
+# Name To identify to status host as
+clientName: "changeMe"
+
+# Enable and set hosts address/port if using the status server
+isStatusClient: true
+statusHostAddr: "127.0.0.1"
+statusHostPort: 2288
+
+# Enable and set address/port to operate as a nut client for shutdowns
+isNUTClient: false
+nutHostAddr: "192.168.1.165"
+nutHostPort: 3493
+nutUser: "user"
+nutPass: "pass"
+nutPollFreq: 20 # How often to poll the nut server in seconds
+
+# Will enable shutdown, if isNUTClient = true will monitor NUT endpoint and shutdown at threshold
+# If is NUTClient = false, will relay shutdown threshold to status host that is running NUT which will send shutdown packet once hit
+# If disabled, will not run nut even if set to true and will not be shutdown by status host either
+doShutDown: true
+
+# Status host will attempt to send wake on lan packet after threshold if doShutDown = true;
+doWakeOnLan: true
+
+# Will print status updates to terminal as well as relay them if isStatusClient = true
+printStatusOut: false
+printFreq: 30 # How offten to print to terminal if enabled
+
+# If isShutDownPct = true, will used threshold as a precent of battery level, if false will use threshold as seconds left on runtime
+isShutDownPct: true
+shutDownThreshold: 50
+
+# Wakehup threshold is always a percentage and should be between 0-100
+wakeUpThreshold: 80

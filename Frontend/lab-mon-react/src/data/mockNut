@@ -1,0 +1,11 @@
+{
+  "status": "OL",
+  "runtime": 1193,
+  "charge": 100,
+  "load": 54,
+  "power": 978,
+  "inputVoltage": 119,
+  "outputVoltage": 120,
+  "temperature": 36.9,
+  "testResult": "Done and passed"
+}
