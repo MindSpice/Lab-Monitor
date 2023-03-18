@@ -1,13 +1,18 @@
 package io.mindspice.data;
 
+import java.time.LocalTime;
+import java.util.List;
+
 public record NutData(
+        boolean online,
         String status,
-        int runtime,
-        int charge,
-        int load,
-        int power,
-        float inputVoltage,
-        float outputVoltage,
-        float temperature,
-        String testResult) {
+        double runtime,
+        double charge,
+        double load,
+        double power,
+        double inputVoltage,
+        double outputVoltage,
+        double temperature,
+        String testResult,
+        LocalTime time) {
 }

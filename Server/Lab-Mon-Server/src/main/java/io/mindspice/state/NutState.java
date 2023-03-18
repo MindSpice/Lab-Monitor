@@ -1,19 +1,28 @@
 package io.mindspice.state;
 
 import io.mindspice.Settings;
+import io.mindspice.data.FullNutData;
+import io.mindspice.data.LinePoint;
 import io.mindspice.data.NutData;
 
+import java.awt.*;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedDeque;
+
+import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class NutState {
     private static NutState instance = null;
     private final ConcurrentLinkedDeque<NutData> nutData = new ConcurrentLinkedDeque<>();
+    private volatile List<String> infoList = new ArrayList<>(0);
 
     private NutState() {
     }
+
 
     public static NutState get() {
         if (instance == null) {
@@ -21,6 +30,7 @@ public class NutState {
         }
         return instance;
     }
+
 
     public void addData(NutData data) {
         if (nutData.size() == Settings.get().nutHistorySize) {
@@ -31,11 +41,80 @@ public class NutState {
         }
     }
 
-    public List<NutData> getData() {
-        return new ArrayList<>(nutData);
+
+    public void updateInfoList(List<String> infoList) {
+        this.infoList = infoList;
     }
+
+    public boolean isOnline() {
+        if (nutData.peekLast() == null) {
+            return false;
+        }
+        return nutData.peekLast().online();
+    }
+
+    public List<String> getInfoList() {
+        return infoList;
+    }
+
+
+    public FullNutData getFullData() {
+        var data = new ArrayList<>(nutData);
+        if (data.isEmpty()) { return null; }
+        var ds = data.size();
+
+        var voltageIn = new LinePoint[]{new LinePoint("Input Voltage")};
+        var voltageOut = new LinePoint[]{new LinePoint("Output Voltage")};
+        var power = new LinePoint[]{new LinePoint("Power")};
+        var load = new LinePoint[]{new LinePoint("Load")};
+        var charge = new LinePoint[]{new LinePoint("Charge")};
+        var runtime = new LinePoint[]{new LinePoint("Runtime")};
+        var temperature = new LinePoint[]{new LinePoint("Celsius")};
+        var online = new LinePoint[]{new LinePoint("Online")};
+
+        LocalTime lastTime = null;
+        for (var dp : data) {
+            if (lastTime == null){
+                lastTime = dp.time();
+            } else {
+               if (!(SECONDS.between(lastTime, dp.time()) >= Settings.get().dashboardInterval)) {
+                   continue;
+               } else {
+                   lastTime = dp.time();
+               }
+            }
+
+            var time = dp.time().truncatedTo(MINUTES).toString();
+            voltageIn[0].addData(new LinePoint.Point(time, dp.inputVoltage()));
+            voltageOut[0].addData(new LinePoint.Point(time, dp.outputVoltage()));
+            power[0].addData(new LinePoint.Point(time, dp.power()));
+            load[0].addData(new LinePoint.Point(time, dp.load()));
+            charge[0].addData(new LinePoint.Point(time, dp.charge()));
+            runtime[0].addData(new LinePoint.Point(time, dp.runtime()));
+            temperature[0].addData(new LinePoint.Point(time, dp.temperature()));
+            online[0].addData(new LinePoint.Point(time, dp.online() ? 1d : 0d));
+        }
+
+        return new FullNutData(
+                voltageIn,
+                voltageOut,
+                power,
+                load,
+                charge,
+                runtime,
+                temperature,
+                online
+        );
+
+    }
+
 
     public NutData getRecentData() {
        return nutData.peekLast();
     }
+
+    public double getCharge() {
+        return nutData.peekLast().charge();
+    }
+
 }

@@ -7,10 +7,12 @@ import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.GlobalMemory;
 import oshi.hardware.HardwareAbstractionLayer;
+import oshi.hardware.NetworkIF;
 
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.List;
 
 public class SysInfo {
     private static SysInfo instance = null;
@@ -89,6 +91,10 @@ public class SysInfo {
         return SYS_INFO.getHardware().getSensors().getCpuTemperature();
     }
 
+    public List<String> getMACList() {
+        return HW_LAYER.getNetworkIFs().stream().map(NetworkIF::getMacaddr).toList();
+    }
+
     public DiskInfo[] getDiskInfo() {
         var disks = SYS_INFO.getOperatingSystem().getFileSystem().getFileStores();
         var diskInfo = new DiskInfo[disks.size()];
@@ -115,8 +121,8 @@ public class SysInfo {
                 getTotalCoreUsage(),
                 getMemoryUsage(),
                 getSwapUsage(),
-                Settings.get().sendDiskInfo ? getDiskInfo() : null,
-                LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
+                Settings.get().sendDiskInfo ? getDiskInfo() : new DiskInfo[0],
+                LocalTime.now().truncatedTo(ChronoUnit.MINUTES).toString()
         );
     }
 }

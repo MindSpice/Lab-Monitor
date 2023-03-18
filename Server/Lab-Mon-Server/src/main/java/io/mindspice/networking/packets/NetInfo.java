@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit;
 
 public class NetInfo {
     public String client;
-    public  double cpuTemp;
+    public double cpuTemp;
     public int cpuThreads;
     public int cpuProcesses;
     public double[] cpuSpeeds;

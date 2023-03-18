@@ -35,13 +35,12 @@ public class NutMonitor implements Runnable {
             return;
         }
         try {
-
             if (settings.isShutDownPct) {
                 if (Integer.parseInt(device.getVariable(settings.nutPctString).getValue()) <= settings.shutDownThreshold) {
                     Utils.shutdown();
                 }
             } else {
-                if (Integer.parseInt(device.getVariable(settings.nutPctString).getValue()) <= settings.shutDownThreshold) {
+                if (Integer.parseInt(device.getVariable(settings.nutRuntimeString).getValue()) <= settings.shutDownThreshold) {
                     Utils.shutdown();
                 }
             }

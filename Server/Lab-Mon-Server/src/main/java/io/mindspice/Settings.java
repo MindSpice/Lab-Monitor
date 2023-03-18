@@ -16,6 +16,7 @@ public class Settings {
     public boolean isNUTMonitor = true;
     public int clientPollRate = 30;
     public int nutPollRate = 20;
+    public int dashboardInterval = 1;
     public String nutHostAddr = "127.0.0.1";
     public int nutHostPort = 3493;
     public String nutDevice = "eaton";
@@ -26,6 +27,7 @@ public class Settings {
     public String nutStatusVar = "ups.status";
     public String nutOnlineVal = "OL";
     public String nutReplaceBatVal = "RB";
+    public String nutBypassVal = "BYPASS";
     public String nutPowerDrawVar = "ups.realpower";
     public String nutLoadVar = "ups.load";
     public String nutOutputVar = "output.voltage";
@@ -34,6 +36,7 @@ public class Settings {
     public String nutTestVar = "ups.test.result";
     public int nutHistorySize = 120;
     public int clientHistorySize = 240;
+    public String broadcastAddress = "192.168.1.255";
 
 
     public static Settings get() {

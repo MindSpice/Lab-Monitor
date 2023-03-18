@@ -17,7 +17,6 @@ public class LinePoint {
     }
 
 
-    public record Point(String x, Double y) {
-    }
+    public record Point(String x, Double y) {}
 }
 

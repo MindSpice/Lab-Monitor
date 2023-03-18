@@ -20,6 +20,7 @@ package io.mindspice.jnut;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -194,6 +195,26 @@ public class Device {
             }
         }
         return varList;
+    }
+
+    public HashMap<String, String> getVariableTable() throws IOException, NutException {
+        if (client == null) {
+            return null;
+        }
+
+        List<String> res = client.list("VAR", name);
+        if (res == null) {
+            return null;
+        }
+
+        HashMap<String,String> varTable = new HashMap<>(res.size());
+        for (String re : res) {
+            String[] arr = Client.splitNameValueString(re);
+            if (arr != null) {
+                varTable.put(arr[0],new Variable(arr[0], this).getValue());
+            }
+        }
+        return varTable;
     }
 
     /**

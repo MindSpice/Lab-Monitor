@@ -5,7 +5,7 @@ import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import { useEffect, useState } from "react";
 import LineChart from "../../components/LineChart";
-import mockCpu from "../../data/mockCpu";
+import BarChart from "../../components/BarChart";
 
 const columns = [
   {
@@ -40,6 +40,14 @@ const columns = [
     headerAlign: "center",
     align: "center",
     flex: 0.5,
+  },
+  ,
+  {
+    field: "os",
+    headerName: "SYS INFO",
+    headerAlign: "center",
+    align: "center",
+    flex: 1,
   },
   {
     field: "cpuTemp",
@@ -98,16 +106,20 @@ const ClientDashboard = () => {
   const [viewData, setViewData] = useState([]);
   const [clientData, setClientData] = useState([]);
   const [isSelectLoaded, setSelectLoaded] = useState(false);
+  const [isViewLoaded, setViewLoaded] = useState(false);
 
   useEffect(() => {
     const fetchOverview = async () => {
       const response = await fetch("http://127.0.0.1:7568/client_overview");
       const data = await response.json();
       if (data && data.length && response.status === 200) {
-        console.log("setting overview data");
         setViewData(data);
+        setViewLoaded(true);
+      } else {
+        setViewLoaded(false);
       }
     };
+
     const fetchSelected = async () => {
       const clientName = encodeURIComponent("changeMe");
       const response = await fetch(
@@ -117,8 +129,13 @@ const ClientDashboard = () => {
       if (response.status === 200) {
         setClientData(data);
         setSelectLoaded(true);
+      } else {
+        setSelectLoaded(false);
       }
     };
+
+    fetchOverview();
+    fetchSelected();
 
     const interval = setInterval(() => {
       fetchOverview();
@@ -129,51 +146,61 @@ const ClientDashboard = () => {
   }, []);
 
   return (
-  
-    <Box m="20px">
+    
+    <Box m="5px" textAlign="center" >
       {/* <Header title="Clients" subtitle="Overview of connected clients" /> */}
       <Box
-        m="0px 0 0 0"
+        m="0px 0 0px 0"
         height="40vh"
         width="95.3vw"
         sx={{
           "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: colors.blueAccent[700],
+            backgroundColor: colors.blueAccent[600],
           },
           "& .MuiDataGrid-virtualScroller": {
             backgroundColor: colors.primary[400],
           },
           "& .MuiDataGrid-footerContainer": {
-            backgroundColor: colors.blueAccent[700],
+            backgroundColor: colors.blueAccent[600],
+            height: 25,
+            minHeight: 10,
           },
         }}
       >
-        <DataGrid
-          density="compact"
-          getRowId={(row) => row.address}
-          rows={viewData}
-          columns={columns}
-          //components={{ Toolbar: GridToolbar }}
-        />
+        {isViewLoaded ? (
+          <DataGrid
+            density="compact"
+            getRowId={(row) => row.address}
+            rows={viewData}
+            columns={columns}
+            //components={{ Toolbar: GridToolbar }}
+          />
+        ) : (
+          <p>Loading</p>
+        )}
       </Box>
-      <Box display="flex" flexDirection="row">
-        <Box height="25vh" width="47vw">
+      <Box display="flex" flexDirection="row" >
+        <Box height="21vh" width="48.25vw" >
+          <h3>CPU Speed</h3>
           {isSelectLoaded ? (
             <LineChart
-              height="20vh"
               xLedge={"CPU Speed"}
               yLedge={"GHz"}
+              tickSize={15}
+              curve="monotoneX"
               data={clientData.cpuSpeed}
             />
           ) : (
             <p>Loading</p>
           )}
 
+          <h3>CPU USage</h3>
           {isSelectLoaded ? (
             <LineChart
-              height="20vh"
               xLedge={"CPU Usage"}
               yLedge={"%"}
+              tickSize={15}
+              curve="monotoneX"
               data={clientData.cpuUsage}
             />
           ) : (
@@ -182,19 +209,31 @@ const ClientDashboard = () => {
         </Box>
 
         <Box>
-        <Box height="25vh" width="48vw">
-          {isSelectLoaded ? (
-            <LineChart
-              height="20vh"
-              xLedge={"Memory Usage"}
-              yLedge={"GB"}
-              data={clientData.memSwap}
-            />
-          ) : (
-            <p>Loading</p>
-          )}
+          <Box height="21vh" width="48.25vw">
+            <h3>Memory Usage</h3>
+            {isSelectLoaded ? (
+              <LineChart
+                xLedge={"Memory Usage"}
+                yLedge={"GB"}
+                tickSize={15}
+                curve="monotoneX"
+                data={clientData.memSwap}
+              />
+            ) : (
+              <p>Loading</p>
+            )}
 
-        </Box>
+            <h3>Disk Space GB</h3>
+            {isSelectLoaded ? (
+              <BarChart
+                xLedge={"Mount"}
+                yLedge={"GB"}
+                data={clientData.diskData}
+              />
+            ) : (
+              <p>Loading</p>
+            )}
+          </Box>
         </Box>
       </Box>
     </Box>

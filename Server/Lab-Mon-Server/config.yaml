@@ -1,23 +1,44 @@
+# Port for API used by dashboard, shouldn't need changed. If so update frontend settings as well
 port: 10152
+
+# Connect to, and monitor NUT server (input below), if false all nut settings will be ignored.
 isNUTMonitor: true
-clientPollRate: 30
+
+# Seconds between client polls should be n * 60 as dashboard expects data in minute intervals.
+clientPollRate: 60
+# Poll nut more often then client, charge/runtime broadcasts to client are at this interval
 nutPollRate: 20
+
+# Only used when sending NUT status, ideally nut should poll more, this is a cap to keep gui updates
+# inline with client updates. Should match client poll rate and be n * 60
+dashboardInterval: 60
+
+# Nut Endpoint Info
 nutHostAddr: "192.168.1.165"
 nutHostPort: 3493
 nutDevice: "eaton"
 nutUser: "admin"
 nutPass: "powerpass"
+
+# Nut variables to parse, shouldn't need changed for most UPS brands, but check nut docks for your driver
 nutRuntimeVar: "battery.runtime"
 nutChargeVar: "battery.charge"
 nutStatusVar: "ups.status"
 nutOnlineVal: "OL"
 nutReplaceBatVal: "RB"
+nutBypassVal : "BYPASS"
 nutPowerDrawVar: "ups.realpower"
 nutLoadVar: "ups.load"
 nutOutputVar: "output.voltage"
 nutInputVar: "input.voltage"
 nutTempVar: "ups.temperature"
 nutTestVar: "ups.test.result"
-nutHistorySize: 120
+
+# How much history to store, will be how much history the dashboard shows
 clientHistorySize: 240
+# Set to expected history size * (dashboardInterval / nutPollRate) since nut should be polling more often
+nutHistorySize: 720
+
+# Broadcast Address for WOL packets, typically your network identifier .255
+broadcastAddress: "192.168.1.255"
 

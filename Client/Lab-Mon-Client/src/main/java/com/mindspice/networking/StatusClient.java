@@ -14,6 +14,7 @@ import com.mindspice.system.SysInfo;
 import com.mindspice.util.Utils;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 
 public class StatusClient {
     Client client = new Client();
@@ -22,16 +23,20 @@ public class StatusClient {
     public StatusClient() throws IOException {
         var kryo = client.getKryo();
         kryo.register(double[].class);
+        kryo.register(String[].class);
         kryo.register(Handshake.class);
         kryo.register(DiskInfo.class);
         kryo.register(NetInfo.class);
         kryo.register(Request.class);
         kryo.register(Update.class);
+        kryo.register(DiskInfo.class);
+        kryo.register(DiskInfo[].class);
         client.start();
         client.connect(5000, settings.statusHostAddr, settings.statusHostPort);
         client.sendTCP(new Handshake(
                 settings.clientName,
                 SysInfo.getInstance().getSystemInfo(),
+                SysInfo.getInstance().getMACList().toArray(new String[0]),
                 settings.doWakeOnLan,
                 (settings.doShutDown && !settings.isNUTClient),
                 Settings.get().wakeUpThreshold)
@@ -66,11 +71,11 @@ public class StatusClient {
         client.sendTCP(new Handshake(
                 settings.clientName,
                 SysInfo.getInstance().getSystemInfo(),
+                SysInfo.getInstance().getMACList().toArray(new String[0]),
                 settings.doWakeOnLan,
                 (settings.doShutDown && !settings.isNUTClient),
                 Settings.get().wakeUpThreshold)
         );
-
     }
 
     public boolean isConnected() {

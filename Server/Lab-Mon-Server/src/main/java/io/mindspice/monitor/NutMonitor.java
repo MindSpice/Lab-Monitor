@@ -9,12 +9,13 @@ import io.mindspice.state.ClientStates;
 import io.mindspice.state.NutState;
 
 import java.io.IOException;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
-public class NutMonitor implements Runnable{
+public class NutMonitor implements Runnable {
     private Client client;
     private Device device;
     private final Settings settings = Settings.get();
-
 
 
     public NutMonitor() throws IOException, NutException {
@@ -31,42 +32,35 @@ public class NutMonitor implements Runnable{
                 System.out.println("Failed To Re-Connect to NUT Host");
             }
         }
-        if (device == null || !client.isConnected()) {
-            return;
-        }
+        if (device == null || !client.isConnected()) { return; }
 
         try {
-            var deviceStatus = device.getVariable(settings.nutStatusVar).getValue();
-            var deviceCharge =  Integer.parseInt(device.getVariable(settings.nutChargeVar).getValue());
+            var nutInfo = device.getVariableTable();
+            var deviceStatus = nutInfo.get(settings.nutStatusVar);
+            var deviceCharge = Integer.parseInt(nutInfo.get(settings.nutChargeVar));
             var data = new NutData(
+                    isOnline(deviceStatus),
                     deviceStatus,
-                    Integer.parseInt(device.getVariable(settings.nutRuntimeVar).getValue()),
+                    Double.parseDouble(nutInfo.get(settings.nutRuntimeVar)),
                     deviceCharge,
-                    Integer.parseInt(device.getVariable(settings.nutLoadVar).getValue()),
-                    Integer.parseInt(device.getVariable(settings.nutPowerDrawVar).getValue()),
-                    Float.parseFloat(device.getVariable(settings.nutInputVar).getValue()),
-                    Float.parseFloat(device.getVariable(settings.nutOutputVar).getValue()),
-                    Float.parseFloat(device.getVariable(settings.nutTempVar).getValue()),
-                    device.getVariable(settings.nutTestVar).getValue()
+                    Double.parseDouble(nutInfo.get(settings.nutLoadVar)),
+                    Double.parseDouble(nutInfo.get(settings.nutPowerDrawVar)),
+                    Double.parseDouble(nutInfo.get(settings.nutInputVar)),
+                    Double.parseDouble(nutInfo.get(settings.nutOutputVar)),
+                    Double.parseDouble(nutInfo.get(settings.nutTempVar)),
+                    nutInfo.get(settings.nutTestVar),
+                    LocalTime.now().truncatedTo(ChronoUnit.SECONDS)
             );
             NutState.get().addData(data);
-
-            if (!deviceStatus.equals(Settings.get().nutOnlineVal)) {
-                for (var client : ClientStates.get().getClients()) {
-                    if (!client.isConnected() && client.isWakeOnLan()) {
-                        if (deviceCharge >= client.getWakeupThreshold()) {
-                            //TODO send wakeup packet to client.getAddress()
-                        }
-                    }
-                }
-            }
-
+            NutState.get().updateInfoList(nutInfo.entrySet()
+                    .stream()
+                    .map(s -> (s.getKey() + ": " + s.getValue()))
+                    .toList()
+            );
         } catch (Exception e) {
             System.out.println("Error Parsing Nut Server");
             e.printStackTrace();
         }
-
-
     }
 
     private void connect() throws IOException, NutException {
@@ -74,5 +68,9 @@ public class NutMonitor implements Runnable{
         device = client.getDevice(Settings.get().nutDevice);
     }
 
-
+    private boolean isOnline(String status) {
+        return status.equals(settings.nutOnlineVal)
+                || status.equals(settings.nutReplaceBatVal)
+                || status.equals(settings.nutBypassVal);
+    }
 }

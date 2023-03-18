@@ -20,13 +20,17 @@ public class InfoServer {
     public InfoServer() throws IOException {
         var kryo = server.getKryo();
         kryo.register(double[].class);
+        kryo.register(String[].class);
         kryo.register(Handshake.class);
         kryo.register(DiskInfo.class);
         kryo.register(NetInfo.class);
         kryo.register(Request.class);
         kryo.register(Update.class);
+        kryo.register(DiskInfo.class);
+        kryo.register(DiskInfo[].class);
         server.bind(Settings.get().port);
         server.start();
+
 
         server.addListener(new Listener() {
             public void received (Connection connection, Object object) {
@@ -53,10 +57,10 @@ public class InfoServer {
 
     public void sendBatteryUpdate() {
         var update = new Update();
-        var nutData = NutState.get().getData();
+        var nutData = NutState.get().getRecentData();
         update.request = Request.BATTERY;
-        update.runtime = nutData.get(nutData.size() -1).runtime();
-        update.batteryPct = nutData.get(nutData.size() -1).charge();
+        update.runtime = (int) nutData.runtime();
+        update.batteryPct = (int) nutData.charge();
 
         for (var client : ClientStates.get().getClients()) {
             if (client.isSendShutdown()) {

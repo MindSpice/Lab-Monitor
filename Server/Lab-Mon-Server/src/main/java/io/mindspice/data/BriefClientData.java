@@ -1,9 +1,10 @@
 package io.mindspice.data;
 
-public record SimpleClientData(
+public record BriefClientData(
      boolean isConnected,
      String name,
      String address,
+     String os,
      String cpuTemp,
      String cpuAvgSpeed,
      String cpuAvgUsage,

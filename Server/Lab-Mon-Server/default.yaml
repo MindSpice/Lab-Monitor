@@ -1,8 +1,9 @@
 ---
 port: 10152
 isNUTMonitor: true
-clientPollRate: 30
+clientPollRate: 60
 nutPollRate: 20
+dashboardInterval: 1
 nutHostAddr: "192.168.1.165"
 nutHostPort: 3493
 nutDevice: "eaton"
@@ -13,11 +14,13 @@ nutChargeVar: "battery.charge"
 nutStatusVar: "ups.status"
 nutOnlineVal: "OL"
 nutReplaceBatVal: "RB"
+nutBypassVal: "BYPASS"
 nutPowerDrawVar: "ups.realpower"
 nutLoadVar: "ups.load"
 nutOutputVar: "output.voltage"
 nutInputVar: "input.voltage"
 nutTempVar: "ups.temperature"
 nutTestVar: "ups.test.result"
-nutHistorySize: 120
+nutHistorySize: 720
 clientHistorySize: 240
+broadcastAddress: "192.168.1.255"

@@ -2,7 +2,7 @@ package io.mindspice.state;
 
 import com.esotericsoftware.kryonet.Connection;
 import io.mindspice.data.FullClientData;
-import io.mindspice.data.SimpleClientData;
+import io.mindspice.data.BriefClientData;
 import io.mindspice.networking.packets.Handshake;
 import io.mindspice.networking.packets.NetInfo;
 
@@ -64,11 +64,21 @@ public class ClientStates {
         return new ArrayList<>(clients.values());
     }
 
-    public List<SimpleClientData> getClientsOverview() {
-        var clientData = new ArrayList<SimpleClientData>(clients.size());
+    public List<BriefClientData> getClientsOverview() {
+        var clientData = new ArrayList<BriefClientData>(clients.size());
         for (var client : clients.values()) {
             clientData.add(client.getSimpleData());
         }
         return clientData;
+    }
+
+    public List<ClientState> getOfflineClients() {
+        var offlineClients = new ArrayList<ClientState>();
+        for (var client : clients.values()) {
+            if (!client.isConnected()) {
+                offlineClients.add(client);
+            }
+        }
+        return offlineClients;
     }
 }

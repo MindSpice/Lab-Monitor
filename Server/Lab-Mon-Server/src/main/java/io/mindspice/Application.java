@@ -1,13 +1,9 @@
 package io.mindspice;
 
-import io.mindspice.monitor.InfoMonitor;
+import io.mindspice.monitor.ClientMonitor;
 import io.mindspice.monitor.NutMonitor;
-import io.mindspice.networking.InfoServer;
-import io.mindspice.state.NutState;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
@@ -21,7 +17,7 @@ public class Application {
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
 		try {
-			exec.scheduleAtFixedRate(new InfoMonitor(), 0,
+			exec.scheduleAtFixedRate(new ClientMonitor(), 0,
 					Settings.get().clientPollRate, TimeUnit.SECONDS);
 		} catch (IOException e) {
 			System.out.println("Failed To Start Info Monitor/Server");

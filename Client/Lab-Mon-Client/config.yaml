@@ -5,7 +5,7 @@ clientName: "changeMe"
 isStatusClient: true
 statusHostAddr: "127.0.0.1"
 statusHostPort: 10152
-sendDiskInfo: false
+sendDiskInfo: true
 
 # Enable and set address/port to operate as a nut client for shutdowns
 isNUTClient: true

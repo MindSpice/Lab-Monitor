@@ -2,17 +2,20 @@ package io.mindspice.state;
 
 import com.esotericsoftware.kryonet.Connection;
 import io.mindspice.Settings;
+import io.mindspice.data.DiskData;
 import io.mindspice.data.FullClientData;
 import io.mindspice.data.LinePoint;
-import io.mindspice.data.SimpleClientData;
+import io.mindspice.data.BriefClientData;
 import io.mindspice.networking.packets.Handshake;
 import io.mindspice.networking.packets.NetInfo;
 import io.mindspice.utils.Utils;
 
 import java.text.DecimalFormat;
+import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedDeque;
+
+import static java.time.temporal.ChronoUnit.MINUTES;
 
 public class ClientState {
     private String name;
@@ -21,6 +24,7 @@ public class ClientState {
     private boolean isSendShutdown;
     private int wakeupThreshold;
     private String address;
+    private String[] macAddresses;
     private DecimalFormat df =  Utils.getFormatter();
 
     private Connection connection;
@@ -29,21 +33,23 @@ public class ClientState {
     public ClientState(Connection connection, Handshake handshake) {
         name = handshake.name;
         os = handshake.os;
+        address = connection.getRemoteAddressTCP().getAddress().getHostAddress();
         isWakeOnLan = handshake.sendWakeOnLan;
         isSendShutdown = handshake.sendShutdownInfo;
         wakeupThreshold = handshake.wakeThreshold;
+        macAddresses = handshake.macAddress;
         this.connection = connection;
-        address = connection.getRemoteAddressTCP().getAddress().getHostAddress();
     }
 
 
     public void onReconnection(Connection connection, Handshake handshake) {
         os = handshake.os;
+        address = connection.getRemoteAddressTCP().getAddress().getHostAddress();
         isWakeOnLan = handshake.sendWakeOnLan;
         isSendShutdown = handshake.sendShutdownInfo;
         wakeupThreshold = handshake.wakeThreshold;
+        macAddresses = handshake.macAddress;
         this.connection = connection;
-        address = connection.getRemoteAddressTCP().getAddress().getHostAddress();
     }
 
     public void addData(NetInfo data) {
@@ -56,14 +62,16 @@ public class ClientState {
     }
 
     public FullClientData getFullData() {
-        var data = new ArrayList<NetInfo>(infoData);
+        var data = new ArrayList<>(infoData);
         if (data.isEmpty()) { return null; }
-        var dataSize = data.size();
         var coreCount = data.get(0).cpuSpeeds.length;
+        var diskCount = data.get(data.size() -1).diskInfo.length;
+        var diskData = new DiskData[diskCount];
 
         var cpuSpeeds = new LinePoint[coreCount];
         var cpuUsage = new LinePoint[coreCount];
         var memSwap = new LinePoint[2];
+
 
         memSwap[0] = new LinePoint("Memory");
         memSwap[1] = new LinePoint("Swap");
@@ -71,6 +79,7 @@ public class ClientState {
             cpuSpeeds[i] = new LinePoint("Core " + i);
             cpuUsage[i] = new LinePoint("Core " + i);
         }
+
 
         for (var dp : data) {
             for (int i = 0; i < coreCount; ++i) {
@@ -81,24 +90,35 @@ public class ClientState {
             memSwap[1].addData(new LinePoint.Point(dp.time, dp.swapUsage[0]));
         }
 
+        for (int i = 0; i < diskCount; ++i) {
+            var disk = data.get(data.size() -1).diskInfo[i];
+            diskData[i] = new DiskData(
+                    disk.mount,
+                    Double.parseDouble(df.format(disk.totalSpace - disk.usableSpace)),
+                    Double.parseDouble(df.format(disk.usableSpace))
+            );
+        }
+
+
         return new FullClientData(
                 name,
-                os,
                 address,
                 cpuSpeeds,
                 cpuUsage,
-                memSwap
+                memSwap,
+                diskData
         );
     }
 
-    public SimpleClientData getSimpleData() {
+    public BriefClientData getSimpleData() {
         var data = infoData.peekLast();
         if (data == null) return null;
 
-        return new SimpleClientData(
+        return new BriefClientData(
                 isConnected(),
                 name,
                 address,
+                os,
                 data.cpuTemp + "C",
                 df.format(data.cpuAvgSpeed) + "GHz",
                 df.format(data.cpuAvgUsage) + "%",
@@ -115,6 +135,10 @@ public class ClientState {
 
     public String getAddress() {
         return address;
+    }
+
+    public String[] getMACAddresses() {
+        return macAddresses;
     }
 
     public boolean isWakeOnLan() {
