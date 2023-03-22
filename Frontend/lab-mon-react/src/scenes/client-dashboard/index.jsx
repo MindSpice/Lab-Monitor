@@ -6,6 +6,7 @@ import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import { useEffect, useState } from "react";
 import LineChart from "../../components/LineChart";
 import BarChart from "../../components/BarChart";
+import { apiEndpoint, historySize } from "../../settings";
 
 const columns = [
   {
@@ -97,57 +98,128 @@ const columns = [
     headerAlign: "center",
     align: "center",
     flex: 0.5,
-  },
+  }
 ];
+
+const clientObj = {
+  lastTime: -1,
+  name: "",
+  address: "",
+  cpuSpeed: [],
+  cpuUsage: [],
+  memSwap: [],
+  diskData: [],
+}
 
 const ClientDashboard = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const [viewData, setViewData] = useState([]);
-  const [clientData, setClientData] = useState([]);
   const [isSelectLoaded, setSelectLoaded] = useState(false);
   const [isViewLoaded, setViewLoaded] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [viewData, setViewData] = useState([]);
+  const [clientData, setClientData] = useState(clientObj);
 
-  useEffect(() => {
-    const fetchOverview = async () => {
-      const response = await fetch("http://127.0.0.1:7568/client_overview");
-      const data = await response.json();
-      if (data && data.length && response.status === 200) {
-        setViewData(data);
-        setViewLoaded(true);
-      } else {
-        setViewLoaded(false);
+
+
+  function updateClientData(newData) {
+
+    // if (newData.name != clientData.name) {
+    //   setClientData(clientObj);
+    // }
+
+    if (newData.lastTime <= clientData.lastTime) {
+      return;
+    }
+    const updatedData = { ...clientData };
+    const maxSize = historySize * 1.2;
+
+    if (updatedData.lastTime < 0) {
+      updatedData.cpuSpeed = newData.cpuSpeed;
+      updatedData.cpuUsage = newData.cpuUsage;
+      updatedData.memSwap = newData.memSwap;
+    } else {
+      for (let i = 0; i < updatedData.cpuSpeed.length; ++i) {
+      updatedData.cpuSpeed[i].data.push(newData.cpuSpeed[i].data[0]);
+      updatedData.cpuUsage[i].data.push(newData.cpuUsage[i].data[0]);
       }
-    };
+      updatedData.memSwap[0].data.push(newData.memSwap[0].data[0]);
+      updatedData.memSwap[1].data.push(newData.memSwap[1].data[0]);
+    }
 
-    const fetchSelected = async () => {
-      const clientName = encodeURIComponent("changeMe");
-      const response = await fetch(
-        `http://127.0.0.1:7568/client_full?name=${clientName}`
-      );
-      const data = await response.json();
-      if (response.status === 200) {
-        setClientData(data);
-        setSelectLoaded(true);
-      } else {
-        setSelectLoaded(false);
+    if (updatedData.cpuSpeed.length > maxSize) {
+      for (let i = 0; i < updatedData.cpuSpeed.length; ++i) {
+        updatedData.cpuSpeed[i].data = updatedData.cpuSpeed[i].data.slice(-maxSize);
+        updatedData.cpuUsage[i].data = updatedData.cpuUsage[i].data.slice(-maxSize);
       }
-    };
+      updatedData.memSwap[0].data = updatedData.memSwap[0].data.slice(-maxSize);
+      updatedData.memSwap[1].data = updatedData.memSwap[1].data.slice(-maxSize);
+    }
+    updatedData.lastTime = newData.lastTime;
+    updatedData.diskData = newData.diskData;
+    updatedData.name = newData.name;
+    setClientData(updatedData)
+  }
 
+  const  updateSelectedClient = (params, event) => {
+    setSelectedClient(params.row.name);
+    fetchSelected();
+  }
+
+
+
+  const fetchOverview = async () => {
+    const response = await fetch(apiEndpoint + "/client_overview");
+    const data = await response.json();
+    if (data && data.length && response.status === 200) {
+      setViewData(data);
+      setViewLoaded(true);
+    } else {
+      setViewLoaded(false);
+    }
+  };
+
+  const fetchSelected = async () => {
+    if (selectedClient == null) {
+      return;
+    }
+    const clientName = encodeURIComponent(selectedClient);
+    console.log(selectedClient)
+
+    const response = 
+    clientData.lastTime < 0  && selectedClient 
+    ? await fetch(apiEndpoint + `/client_full_all?name=${clientName}`)
+    : await fetch(apiEndpoint + `/client_full?name=${clientName}`)
+
+    const data = await response.json();
+
+    if (response.status === 200) {
+      updateClientData(data);
+
+      setSelectLoaded(true);
+    } else {
+      setSelectLoaded(false);
+    }
+  };
+
+
+  useEffect (() => {
     fetchOverview();
     fetchSelected();
+  }, []);
+
+  useEffect(() => {
 
     const interval = setInterval(() => {
       fetchOverview();
       fetchSelected();
-    }, 30000);
+    }, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [clientData, updateClientData, selectedClient]);
 
   return (
-    
-    <Box m="5px" textAlign="center" >
+    <Box m="5px" textAlign="center">
       {/* <Header title="Clients" subtitle="Overview of connected clients" /> */}
       <Box
         m="0px 0 0px 0"
@@ -173,14 +245,15 @@ const ClientDashboard = () => {
             getRowId={(row) => row.address}
             rows={viewData}
             columns={columns}
+            onRowClick={updateSelectedClient}
             //components={{ Toolbar: GridToolbar }}
           />
         ) : (
           <p>Loading</p>
         )}
       </Box>
-      <Box display="flex" flexDirection="row" >
-        <Box height="21vh" width="48.25vw" >
+      <Box display="flex" flexDirection="row">
+        <Box height="21vh" width="48.25vw">
           <h3>CPU Speed</h3>
           {isSelectLoaded ? (
             <LineChart
@@ -241,3 +314,4 @@ const ClientDashboard = () => {
 };
 
 export default ClientDashboard;
+

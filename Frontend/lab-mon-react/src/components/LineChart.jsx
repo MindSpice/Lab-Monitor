@@ -2,9 +2,18 @@ import { useTheme } from "@emotion/react";
 import { ResponsiveLine } from "@nivo/line";
 import { tokens } from "../theme";
 
-const LineChart = ({ data, tickSize = 15, curve = "step", xLedge, yLedge }) => {
+const LineChart = ({
+  data ,
+  tickSize = 15,
+  min = "auto",
+  max = "auto",
+  curve = "step",
+  xLedge,
+  yLedge,
+}) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+
 
   const tickPoints = () => {
     let arr = [];
@@ -16,6 +25,7 @@ const LineChart = ({ data, tickSize = 15, curve = "step", xLedge, yLedge }) => {
     }
     return arr;
   };
+
 
   return (
     <ResponsiveLine
@@ -68,8 +78,8 @@ const LineChart = ({ data, tickSize = 15, curve = "step", xLedge, yLedge }) => {
       }}
       yScale={{
         type: "linear",
-        min: "auto",
-        max: "auto",
+        min: min,
+        max: max,
         stacked: false,
         reverse: false,
       }}
@@ -97,6 +107,7 @@ const LineChart = ({ data, tickSize = 15, curve = "step", xLedge, yLedge }) => {
       enableGridX={true}
       enableGridY={true}
       pointSize={8}
+      borderColor={{ theme: 'background' }}
       pointColor={{ theme: "background" }}
       pointBorderWidth={2}
       pointBorderColor={{ from: "seriesColor" }}

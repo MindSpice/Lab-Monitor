@@ -42,12 +42,12 @@ public class ClientStates {
         }
     }
 
-    public FullClientData getClientData(String name) {
+    public FullClientData getClientData(String name, boolean fullList) {
         var client = clients.get(name);
         if (client == null) {
             return null;
         } else {
-            return client.getFullData();
+            return client.getFullData(fullList);
         }
     }
 

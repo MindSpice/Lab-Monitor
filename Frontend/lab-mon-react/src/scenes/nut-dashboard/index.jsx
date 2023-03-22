@@ -28,7 +28,7 @@ const NutDashboard = () => {
 
     const interval = setInterval(() => {
       fetchNutData();
-    }, 3000);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
@@ -58,7 +58,9 @@ const NutDashboard = () => {
               yLedge={"%"}
               tickSize={15}
               data={nutData.charge}
-              curve ={"monotoneX"}
+              curve={"monotoneX"}
+              min={0}
+              max={100}
             />
           ) : (
             <p>Loading</p>
@@ -71,7 +73,9 @@ const NutDashboard = () => {
               yLedge={"Seconds"}
               tickSize={15}
               data={nutData.runtime}
-              curve ={"monotoneX"}
+              curve={"monotoneX"}
+              min={0}
+              max={"auto"}
             />
           ) : (
             <p>Loading</p>
@@ -84,7 +88,9 @@ const NutDashboard = () => {
               yLedge={"C"}
               tickSize={15}
               data={nutData.temperature}
-              curve ={"monotoneX"}
+              curve={"monotoneX"}
+              min={0}
+              max={60}
             />
           ) : (
             <p>Loading</p>
@@ -98,8 +104,9 @@ const NutDashboard = () => {
               xLedge={"Power Usage"}
               yLedge={"Watts"}
               tickSize={15}
-              curve ={"monotoneX"}
+              curve={"monotoneX"}
               data={nutData.power}
+              min={0}
             />
           ) : (
             <p>Loading</p>
@@ -112,8 +119,8 @@ const NutDashboard = () => {
               yLedge={"Volts"}
               tickSize={15}
               data={nutData.voltageIn}
-              curve ={"stepAfter"}
-            
+              curve={"monotoneX"}
+              min={0}
             />
           ) : (
             <p>Loading</p>
@@ -126,7 +133,8 @@ const NutDashboard = () => {
               yLedge={"Volts"}
               tickSize={15}
               data={nutData.voltageOut}
-              curve ={"stepAfter"}
+              curve={"monotoneX"}
+              min={0}
             />
           ) : (
             <p>Loading</p>
@@ -138,8 +146,10 @@ const NutDashboard = () => {
               xLedge={"Load Percentage"}
               yLedge={"%"}
               tickSize={15}
-              curve ={"monotoneX"}
+              curve={"monotoneX"}
               data={nutData.load}
+              min={0}
+              max={100}
             />
           ) : (
             <p>Loading</p>

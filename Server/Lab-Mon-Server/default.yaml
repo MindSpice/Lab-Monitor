@@ -3,7 +3,7 @@ port: 10152
 isNUTMonitor: true
 clientPollRate: 60
 nutPollRate: 20
-dashboardInterval: 1
+dashboardInterval: 60
 nutHostAddr: "192.168.1.165"
 nutHostPort: 3493
 nutDevice: "eaton"

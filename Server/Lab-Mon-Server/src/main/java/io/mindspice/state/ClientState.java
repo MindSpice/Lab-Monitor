@@ -11,8 +11,12 @@ import io.mindspice.networking.packets.NetInfo;
 import io.mindspice.utils.Utils;
 
 import java.text.DecimalFormat;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -61,8 +65,8 @@ public class ClientState {
         }
     }
 
-    public FullClientData getFullData() {
-        var data = new ArrayList<>(infoData);
+    public FullClientData getFullData(boolean fullList) {
+        var data = fullList ? new ArrayList<>(infoData) : Collections.singletonList(infoData.peekLast());
         if (data.isEmpty()) { return null; }
         var coreCount = data.get(0).cpuSpeeds.length;
         var diskCount = data.get(data.size() -1).diskInfo.length;
@@ -101,6 +105,7 @@ public class ClientState {
 
 
         return new FullClientData(
+                LocalTime.parse(data.get(data.size() - 1).time).toEpochSecond(LocalDate.now(), ZoneOffset.UTC),
                 name,
                 address,
                 cpuSpeeds,

@@ -36,7 +36,7 @@ nutTestVar: "ups.test.result"
 
 # How much history to store, will be how much history the dashboard shows
 clientHistorySize: 240
-# Set to expected history size * (dashboardInterval / nutPollRate) since nut should be polling more often
+# Set to expected history size = (dashboardInterval / nutPollRate) since nut should be polling more often
 nutHistorySize: 720
 
 # Broadcast Address for WOL packets, typically your network identifier .255

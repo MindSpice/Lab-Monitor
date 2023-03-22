@@ -6,9 +6,13 @@ import io.mindspice.data.LinePoint;
 import io.mindspice.data.NutData;
 
 import java.awt.*;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -58,10 +62,9 @@ public class NutState {
     }
 
 
-    public FullNutData getFullData() {
-        var data = new ArrayList<>(nutData);
+    public FullNutData getFullData(boolean fullList) {
+        var data = fullList ? new ArrayList<>(nutData) : Collections.singletonList(nutData.peekLast());
         if (data.isEmpty()) { return null; }
-        var ds = data.size();
 
         var voltageIn = new LinePoint[]{new LinePoint("Input Voltage")};
         var voltageOut = new LinePoint[]{new LinePoint("Output Voltage")};
@@ -96,6 +99,7 @@ public class NutState {
         }
 
         return new FullNutData(
+                data.get(data.size() - 1).time().toEpochSecond(LocalDate.now(), ZoneOffset.UTC),
                 voltageIn,
                 voltageOut,
                 power,

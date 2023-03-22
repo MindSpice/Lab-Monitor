@@ -17,8 +17,8 @@ public class Dashboard {
 
 
     @GetMapping("/nut_full")
-    public ResponseEntity<String> nutFull() {
-        var data = NutState.get().getFullData();
+    public ResponseEntity<String> nutFull(boolean fullList) {
+        var data = NutState.get().getFullData(fullList);
         try {
             if (data == null) {
                 throw new IllegalStateException("Failed To Fetch Full Nut Data");
@@ -96,7 +96,25 @@ public class Dashboard {
 
     @GetMapping("/client_full")
     public ResponseEntity<String> clientFull(String name) {
-        var data = ClientStates.get().getClientData(name);
+        var data = ClientStates.get().getClientData(name, false);
+        try {
+            if (data == null) {
+                throw new IllegalStateException("Failed To Fetch Client Data For: " + name);
+            }
+            return new ResponseEntity<>(json.writeValueAsString(data), HttpStatus.OK);
+        } catch (JsonProcessingException e) {
+            System.out.println("Failed To Serialize Client Overview For" + name);
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/client_full_all")
+    public ResponseEntity<String> clientFullAll(String name) {
+        var data = ClientStates.get().getClientData(name, true);
         try {
             if (data == null) {
                 throw new IllegalStateException("Failed To Fetch Client Data For: " + name);
