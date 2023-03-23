@@ -98,7 +98,7 @@ const columns = [
     headerAlign: "center",
     align: "center",
     flex: 0.5,
-  }
+  },
 ];
 
 const clientObj = {
@@ -109,7 +109,7 @@ const clientObj = {
   cpuUsage: [],
   memSwap: [],
   diskData: [],
-}
+};
 
 const ClientDashboard = () => {
   const theme = useTheme();
@@ -120,96 +120,118 @@ const ClientDashboard = () => {
   const [viewData, setViewData] = useState([]);
   const [clientData, setClientData] = useState(clientObj);
 
-
-
   function updateClientData(newData) {
-
-    // if (newData.name != clientData.name) {
-    //   setClientData(clientObj);
-    // }
 
     if (newData.lastTime <= clientData.lastTime) {
       return;
+
     }
     const updatedData = { ...clientData };
-    const maxSize = historySize * 1.2;
 
     if (updatedData.lastTime < 0) {
       updatedData.cpuSpeed = newData.cpuSpeed;
       updatedData.cpuUsage = newData.cpuUsage;
       updatedData.memSwap = newData.memSwap;
+      console.log(updatedData.memSwap)
     } else {
-      for (let i = 0; i < updatedData.cpuSpeed.length; ++i) {
-      updatedData.cpuSpeed[i].data.push(newData.cpuSpeed[i].data[0]);
-      updatedData.cpuUsage[i].data.push(newData.cpuUsage[i].data[0]);
+      for (let i = 0; i < updatedData.cpuSpeed[0].length; ++i) {
+        updatedData.cpuSpeed[i].data = updatedData.cpuSpeed[i].data.slice(-historySize -1);
+        updatedData.cpuSpeed[i].data.push(newData.cpuSpeed[i].data[0]);
+        updatedData.cpuUsage[i].data = updatedData.cpuUsage[i].data.slice(-historySize -1);
+        updatedData.cpuUsage[i].data.push(newData.cpuUsage[i].data[0]);
       }
+      updatedData.memSwap[0].data = updatedData.memSwap[0].data.slice(-historySize -1);
       updatedData.memSwap[0].data.push(newData.memSwap[0].data[0]);
+      updatedData.memSwap[1].data = updatedData.memSwap[1].data.slice(-historySize -1);
       updatedData.memSwap[1].data.push(newData.memSwap[1].data[0]);
     }
 
-    if (updatedData.cpuSpeed.length > maxSize) {
-      for (let i = 0; i < updatedData.cpuSpeed.length; ++i) {
-        updatedData.cpuSpeed[i].data = updatedData.cpuSpeed[i].data.slice(-maxSize);
-        updatedData.cpuUsage[i].data = updatedData.cpuUsage[i].data.slice(-maxSize);
-      }
-      updatedData.memSwap[0].data = updatedData.memSwap[0].data.slice(-maxSize);
-      updatedData.memSwap[1].data = updatedData.memSwap[1].data.slice(-maxSize);
-    }
     updatedData.lastTime = newData.lastTime;
     updatedData.diskData = newData.diskData;
     updatedData.name = newData.name;
-    setClientData(updatedData)
+    setClientData(updatedData);
   }
 
-  const  updateSelectedClient = (params, event) => {
+  const updateSelectedClient = (params, event) => {
     setSelectedClient(params.row.name);
     fetchSelected();
-  }
-
+  };
 
 
   const fetchOverview = async () => {
-    const response = await fetch(apiEndpoint + "/client_overview");
-    const data = await response.json();
-    if (data && data.length && response.status === 200) {
-      setViewData(data);
-      setViewLoaded(true);
-    } else {
-      setViewLoaded(false);
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
+    try {
+      const response = await fetch(apiEndpoint + "/client_overview", {
+        signal,
+      });
+      const data = await response.json();
+      if (data && data.length && response.status === 200) {
+        setViewData(data);
+        setViewLoaded(true);
+      } else {
+        setViewLoaded(false);
+      }
+    } catch (error) {
+      if (error.name === "AbortError") {
+        console.log("Fetch request aborted");
+      } else {
+        console.error("Fetch failed:", error);
+      }
     }
+
+    return () => {
+      abortController.abort();
+    };
   };
 
   const fetchSelected = async () => {
     if (selectedClient == null) {
       return;
     }
-    const clientName = encodeURIComponent(selectedClient);
-    console.log(selectedClient)
+    const abortController = new AbortController();
+    const signal = abortController.signal;
 
-    const response = 
-    clientData.lastTime < 0  && selectedClient 
-    ? await fetch(apiEndpoint + `/client_full_all?name=${clientName}`)
-    : await fetch(apiEndpoint + `/client_full?name=${clientName}`)
+    try {
+      const clientName = encodeURIComponent(selectedClient);
 
-    const data = await response.json();
+      const response =
+        clientData.lastTime < 0 && selectedClient
+          ? await fetch(apiEndpoint + `/client_full_all?name=${clientName}`, {
+              signal,
+            })
+          : await fetch(apiEndpoint + `/client_full?name=${clientName}`, {
+              signal,
+            });
 
-    if (response.status === 200) {
-      updateClientData(data);
+      const data = await response.json();
 
-      setSelectLoaded(true);
-    } else {
-      setSelectLoaded(false);
+      if (response.status === 200) {
+        updateClientData(data);
+        setSelectLoaded(true);
+      } else {
+        setSelectLoaded(false);
+      }
+    } catch (error) {
+      if (error.name === "AbortError") {
+        console.log("Fetch request aborted");
+      } else {
+        console.error("Fetch failed:", error);
+      }
     }
+
+    return () => {
+      abortController.abort();
+    };
   };
 
-
-  useEffect (() => {
+  useEffect(() => {
     fetchOverview();
     fetchSelected();
   }, []);
 
   useEffect(() => {
-
     const interval = setInterval(() => {
       fetchOverview();
       fetchSelected();
@@ -314,4 +336,3 @@ const ClientDashboard = () => {
 };
 
 export default ClientDashboard;
-
