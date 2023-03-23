@@ -17,8 +17,26 @@ public class Dashboard {
 
 
     @GetMapping("/nut_full")
-    public ResponseEntity<String> nutFull(boolean fullList) {
-        var data = NutState.get().getFullData(fullList);
+    public ResponseEntity<String> nutFull() {
+        var data = NutState.get().getFullData(false);
+        try {
+            if (data == null) {
+                throw new IllegalStateException("Failed To Fetch Full Nut Data");
+            }
+            return new ResponseEntity<>(json.writeValueAsString(data), HttpStatus.OK);
+        } catch (JsonProcessingException e) {
+            System.out.println("Failed To Serialize Nut Data");
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/nut_full_all")
+    public ResponseEntity<String> nutFullAll() {
+        var data = NutState.get().getFullData(true);
         try {
             if (data == null) {
                 throw new IllegalStateException("Failed To Fetch Full Nut Data");

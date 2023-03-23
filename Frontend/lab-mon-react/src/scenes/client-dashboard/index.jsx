@@ -3,7 +3,7 @@ import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import LineChart from "../../components/LineChart";
 import BarChart from "../../components/BarChart";
 import { apiEndpoint, historySize } from "../../settings";
@@ -120,19 +120,18 @@ const ClientDashboard = () => {
   const [viewData, setViewData] = useState([]);
   const [clientData, setClientData] = useState(clientObj);
 
-  function updateClientData(newData) {
+  const updateClientData = useCallback((newData) => {
 
     if (newData.lastTime <= clientData.lastTime) {
       return;
-
     }
+
     const updatedData = { ...clientData };
 
     if (updatedData.lastTime < 0) {
       updatedData.cpuSpeed = newData.cpuSpeed;
       updatedData.cpuUsage = newData.cpuUsage;
       updatedData.memSwap = newData.memSwap;
-      console.log(updatedData.memSwap)
     } else {
       for (let i = 0; i < updatedData.cpuSpeed[0].length; ++i) {
         updatedData.cpuSpeed[i].data = updatedData.cpuSpeed[i].data.slice(-historySize -1);
@@ -150,7 +149,7 @@ const ClientDashboard = () => {
     updatedData.diskData = newData.diskData;
     updatedData.name = newData.name;
     setClientData(updatedData);
-  }
+  }, [clientData]);
 
   const updateSelectedClient = (params, event) => {
     setSelectedClient(params.row.name);
@@ -158,7 +157,7 @@ const ClientDashboard = () => {
   };
 
 
-  const fetchOverview = async () => {
+  const fetchOverview = useCallback(async () => {
     const abortController = new AbortController();
     const signal = abortController.signal;
 
@@ -184,9 +183,9 @@ const ClientDashboard = () => {
     return () => {
       abortController.abort();
     };
-  };
+  }, []);
 
-  const fetchSelected = async () => {
+  const fetchSelected = useCallback(async () => {
     if (selectedClient == null) {
       return;
     }
@@ -213,6 +212,7 @@ const ClientDashboard = () => {
       } else {
         setSelectLoaded(false);
       }
+      
     } catch (error) {
       if (error.name === "AbortError") {
         console.log("Fetch request aborted");
@@ -220,16 +220,15 @@ const ClientDashboard = () => {
         console.error("Fetch failed:", error);
       }
     }
-
     return () => {
       abortController.abort();
     };
-  };
+  }, [selectedClient, clientData.lastTime, updateClientData]);
 
   useEffect(() => {
     fetchOverview();
     fetchSelected();
-  }, []);
+  }, [fetchOverview, fetchSelected]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -238,7 +237,8 @@ const ClientDashboard = () => {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [clientData, updateClientData, selectedClient]);
+  }, [clientData, updateClientData, selectedClient, fetchOverview, fetchSelected]);
+
 
   return (
     <Box m="5px" textAlign="center">
