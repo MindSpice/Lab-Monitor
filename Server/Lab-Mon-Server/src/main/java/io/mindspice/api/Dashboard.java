@@ -92,6 +92,24 @@ public class Dashboard {
         return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
     }
 
+    @GetMapping("/nut_radial_data")
+    public ResponseEntity<String> nutRadialData() {
+        var data = NutState.get().getRadialData();
+        try {
+            if (data == null) {
+                throw new IllegalStateException("Failed To Fetch Radial Nut Data");
+            }
+            return new ResponseEntity<>(json.writeValueAsString(data), HttpStatus.OK);
+        } catch (JsonProcessingException e) {
+            System.out.println("Failed To Serialize Nut Radial Data");
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+    }
+
 
     @GetMapping("/client_overview")
     public ResponseEntity<String> clientsOverview() {
@@ -130,6 +148,7 @@ public class Dashboard {
         return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
     }
 
+
     @GetMapping("/client_full_all")
     public ResponseEntity<String> clientFullAll(String name) {
         var data = ClientStates.get().getClientData(name, true);
@@ -140,6 +159,25 @@ public class Dashboard {
             return new ResponseEntity<>(json.writeValueAsString(data), HttpStatus.OK);
         } catch (JsonProcessingException e) {
             System.out.println("Failed To Serialize Client Overview For" + name);
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+    }
+
+
+    @GetMapping("/client_bar_data")
+    public ResponseEntity<String> clientBarData() {
+        var data = ClientStates.get().getClientBarData();
+        try {
+            if (data == null) {
+                throw new IllegalStateException("Failed To Fetch Client Bar Data");
+            }
+            return new ResponseEntity<>(json.writeValueAsString(data), HttpStatus.OK);
+        } catch (JsonProcessingException e) {
+            System.out.println("Failed To Serialize Client Bar Data Data");
             e.printStackTrace();
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());

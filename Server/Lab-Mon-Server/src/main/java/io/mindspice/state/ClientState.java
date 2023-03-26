@@ -2,10 +2,7 @@ package io.mindspice.state;
 
 import com.esotericsoftware.kryonet.Connection;
 import io.mindspice.Settings;
-import io.mindspice.data.DiskData;
-import io.mindspice.data.FullClientData;
-import io.mindspice.data.LinePoint;
-import io.mindspice.data.BriefClientData;
+import io.mindspice.data.*;
 import io.mindspice.networking.packets.Handshake;
 import io.mindspice.networking.packets.NetInfo;
 import io.mindspice.utils.Utils;
@@ -15,11 +12,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
-
-import static java.time.temporal.ChronoUnit.MINUTES;
 
 public class ClientState {
     private String name;
@@ -56,6 +51,7 @@ public class ClientState {
         this.connection = connection;
     }
 
+
     public void addData(NetInfo data) {
         if (infoData.size() == Settings.get().clientHistorySize) {
             infoData.poll();
@@ -64,6 +60,7 @@ public class ClientState {
             infoData.add(data);
         }
     }
+
 
     public FullClientData getFullData(boolean fullList) {
         var data = fullList ? new ArrayList<>(infoData) : Collections.singletonList(infoData.peekLast());
@@ -76,14 +73,12 @@ public class ClientState {
         var cpuUsage = new LinePoint[coreCount];
         var memSwap = new LinePoint[2];
 
-
         memSwap[0] = new LinePoint("Memory");
         memSwap[1] = new LinePoint("Swap");
         for (int i = 0; i < coreCount; ++i) {
             cpuSpeeds[i] = new LinePoint("Core " + i);
             cpuUsage[i] = new LinePoint("Core " + i);
         }
-
 
         for (var dp : data) {
             for (int i = 0; i < coreCount; ++i) {
@@ -103,7 +98,6 @@ public class ClientState {
             );
         }
 
-
         return new FullClientData(
                 LocalTime.parse(data.get(data.size() - 1).time).toEpochSecond(LocalDate.now(), ZoneOffset.UTC),
                 name,
@@ -115,9 +109,10 @@ public class ClientState {
         );
     }
 
+
     public BriefClientData getSimpleData() {
         var data = infoData.peekLast();
-        if (data == null) return null;
+        if (data == null) { return null; }
 
         return new BriefClientData(
                 isConnected(),
@@ -133,6 +128,20 @@ public class ClientState {
                 df.format(data.swapUsage[0]) + "/" + df.format(data.swapUsage[1]) +"GB"
         );
     }
+
+
+    public ClientBarData getBarData() {
+        var data = infoData.peekLast();
+        if (data == null) { return null; }
+
+        return new ClientBarData(
+                name,
+                Float.parseFloat(df.format(data.cpuAvgUsage)),
+                Float.parseFloat(df.format((data.memoryUsage[0]/ data.memoryUsage[1]) * 100)),
+                Float.parseFloat(df.format((data.swapUsage[0]/ data.swapUsage[1]) * 100))
+        );
+    }
+
 
     public boolean isConnected() {
         return connection.isConnected();

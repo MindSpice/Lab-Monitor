@@ -1,4 +1,4 @@
-# Port for API used by dashboard, shouldn't need changed. If so update frontend settings as well
+# Port used for client server
 port: 10152
 
 # Connect to, and monitor NUT server (input below), if false all nut settings will be ignored.

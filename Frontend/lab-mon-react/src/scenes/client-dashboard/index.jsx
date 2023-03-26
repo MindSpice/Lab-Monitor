@@ -1,114 +1,31 @@
-import { Box, Typography, useTheme } from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import React from 'react';
+import { Box, useTheme } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
-import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
-import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
 import { useEffect, useState, useCallback } from "react";
 import LineChart from "../../components/LineChart";
 import BarChart from "../../components/BarChart";
 import { apiEndpoint, historySize } from "../../settings";
+import columns from '../../components/GridColumns';
 
-const columns = [
-  {
-    field: "isConnected",
-    headerName: "STATUS",
-    headerAlign: "center",
-    align: "center",
-    flex: <div className="2"></div>,
-    cellClassName: "status-column-cell",
-    renderCell: ({ row: isConnected }) => {
-      return (
-        <Box width="60%" m="0 auto" p="5px" display="flex" borderRadius="0px">
-          {isConnected ? (
-            <CheckOutlinedIcon style={{ color: "green" }} />
-          ) : (
-            <BlockOutlinedIcon style={{ color: "red" }} />
-          )}
-        </Box>
-      );
-    },
-  },
-  {
-    field: "name",
-    headerName: "NAME",
-    flex: 1,
-    headerAlign: "center",
-    align: "center",
-  },
-  {
-    field: "address",
-    headerName: "ADDRESS",
-    headerAlign: "center",
-    align: "center",
-    flex: 0.5,
-  },
-  ,
-  {
-    field: "os",
-    headerName: "SYS INFO",
-    headerAlign: "center",
-    align: "center",
-    flex: 1,
-  },
-  {
-    field: "cpuTemp",
-    headerName: "TEMP",
-    headerAlign: "center",
-    align: "center",
-    flex: 0.5,
-  },
-  {
-    field: "cpuAvgSpeed",
-    headerName: "CPU SPEED",
-    headerAlign: "center",
-    align: "center",
-    flex: 0.5,
-  },
-  {
-    field: "cpuAvgUsage",
-    headerName: "CPU USAGE",
-    headerAlign: "center",
-    align: "center",
-    flex: 0.5,
-  },
-  {
-    field: "cpuThreads",
-    headerName: "THREADS",
-    headerAlign: "center",
-    align: "center",
-    flex: 0.5,
-  },
-  {
-    field: "cpuProcesses",
-    headerName: "PROCESSES",
-    headerAlign: "center",
-    align: "center",
-    flex: 0.5,
-  },
-  {
-    field: "memoryUsage",
-    headerName: "MEMORY",
-    headerAlign: "center",
-    align: "center",
-    flex: 0.5,
-  },
-  {
-    field: "swapUsage",
-    headerName: "SWAP",
-    headerAlign: "center",
-    align: "center",
-    flex: 0.5,
-  },
-];
+
 
 const clientObj = {
   lastTime: -1,
   name: "",
   address: "",
-  cpuSpeed: [],
-  cpuUsage: [],
-  memSwap: [],
-  diskData: [],
+  cpuSpeed: [
+    {data: []}
+  ],
+  cpuUsage: [
+    {data: []}
+  ],
+  memSwap: [
+    {data: []}
+  ],
+  diskData: [
+    {data: []}
+  ],
 };
 
 const ClientDashboard = () => {
@@ -117,11 +34,11 @@ const ClientDashboard = () => {
   const [isSelectLoaded, setSelectLoaded] = useState(false);
   const [isViewLoaded, setViewLoaded] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [viewData, setViewData] = useState([]);
+  const [overviewData, setOverviewData] = useState([]);
   const [clientData, setClientData] = useState(clientObj);
 
-  const updateClientData = useCallback((newData) => {
 
+  const updateClientData = useCallback((newData) => {
     if (newData.lastTime <= clientData.lastTime) {
       return;
     }
@@ -133,27 +50,32 @@ const ClientDashboard = () => {
       updatedData.cpuUsage = newData.cpuUsage;
       updatedData.memSwap = newData.memSwap;
     } else {
-      for (let i = 0; i < updatedData.cpuSpeed[0].length; ++i) {
-        updatedData.cpuSpeed[i].data = updatedData.cpuSpeed[i].data.slice(-historySize -1);
+      for (let i = 0; i < updatedData.cpuSpeed.length; ++i) {
+        updatedData.cpuSpeed[i].data = updatedData.cpuSpeed[i].data.slice(-(historySize -1));
         updatedData.cpuSpeed[i].data.push(newData.cpuSpeed[i].data[0]);
-        updatedData.cpuUsage[i].data = updatedData.cpuUsage[i].data.slice(-historySize -1);
+
+        updatedData.cpuUsage[i].data = updatedData.cpuUsage[i].data.slice(-(historySize -1));
         updatedData.cpuUsage[i].data.push(newData.cpuUsage[i].data[0]);
       }
+
       updatedData.memSwap[0].data = updatedData.memSwap[0].data.slice(-historySize -1);
       updatedData.memSwap[0].data.push(newData.memSwap[0].data[0]);
+
       updatedData.memSwap[1].data = updatedData.memSwap[1].data.slice(-historySize -1);
       updatedData.memSwap[1].data.push(newData.memSwap[1].data[0]);
     }
 
     updatedData.lastTime = newData.lastTime;
-    updatedData.diskData = newData.diskData;
     updatedData.name = newData.name;
+    updatedData.diskData = newData.diskData;
     setClientData(updatedData);
+
   }, [clientData]);
 
   const updateSelectedClient = (params, event) => {
     setSelectedClient(params.row.name);
-    fetchSelected();
+    setClientData(clientObj);
+    fetchSelected(params.row.name);
   };
 
 
@@ -166,12 +88,12 @@ const ClientDashboard = () => {
         signal,
       });
       const data = await response.json();
+
       if (data && data.length && response.status === 200) {
-        setViewData(data);
+        setOverviewData(data);
         setViewLoaded(true);
-      } else {
-        setViewLoaded(false);
       }
+
     } catch (error) {
       if (error.name === "AbortError") {
         console.log("Fetch request aborted");
@@ -179,13 +101,13 @@ const ClientDashboard = () => {
         console.error("Fetch failed:", error);
       }
     }
-
     return () => {
       abortController.abort();
     };
   }, []);
 
-  const fetchSelected = useCallback(async () => {
+
+  const fetchSelected  = useCallback(async (selection) => {
     if (selectedClient == null) {
       return;
     }
@@ -193,7 +115,7 @@ const ClientDashboard = () => {
     const signal = abortController.signal;
 
     try {
-      const clientName = encodeURIComponent(selectedClient);
+      const clientName = encodeURIComponent(selection);
 
       const response =
         clientData.lastTime < 0 && selectedClient
@@ -225,19 +147,20 @@ const ClientDashboard = () => {
     };
   }, [selectedClient, clientData.lastTime, updateClientData]);
 
+
   useEffect(() => {
     fetchOverview();
-    fetchSelected();
-  }, [fetchOverview, fetchSelected]);
+  }, [fetchOverview]);
+
 
   useEffect(() => {
     const interval = setInterval(() => {
       fetchOverview();
-      fetchSelected();
+      fetchSelected(selectedClient);
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [clientData, updateClientData, selectedClient, fetchOverview, fetchSelected]);
+  }, [fetchOverview, fetchSelected, selectedClient]);
 
 
   return (
@@ -265,15 +188,17 @@ const ClientDashboard = () => {
           <DataGrid
             density="compact"
             getRowId={(row) => row.address}
-            rows={viewData}
+            rows={overviewData
+      }
             columns={columns}
             onRowClick={updateSelectedClient}
             //components={{ Toolbar: GridToolbar }}
           />
         ) : (
-          <p>Loading</p>
+          <p>Awaiting Selection....</p>
         )}
       </Box>
+      <Box textAlign="center"> <h2>{selectedClient}</h2></Box>
       <Box display="flex" flexDirection="row">
         <Box height="21vh" width="48.25vw">
           <h3>CPU Speed</h3>
@@ -286,7 +211,7 @@ const ClientDashboard = () => {
               data={clientData.cpuSpeed}
             />
           ) : (
-            <p>Loading</p>
+            <p>Awaiting Selection....</p>
           )}
 
           <h3>CPU USage</h3>
@@ -299,7 +224,7 @@ const ClientDashboard = () => {
               data={clientData.cpuUsage}
             />
           ) : (
-            <p>Loading</p>
+            <p>Awaiting Selection....</p>
           )}
         </Box>
 
@@ -312,10 +237,11 @@ const ClientDashboard = () => {
                 yLedge={"GB"}
                 tickSize={15}
                 curve="monotoneX"
+                min={0}
                 data={clientData.memSwap}
               />
             ) : (
-              <p>Loading</p>
+              <p>Awaiting Selection....</p>
             )}
 
             <h3>Disk Space GB</h3>
@@ -323,10 +249,14 @@ const ClientDashboard = () => {
               <BarChart
                 xLedge={"Mount"}
                 yLedge={"GB"}
+                barColors = {["#9ACD32", "#17a807"]}
                 data={clientData.diskData}
+                keys = {["used", "free"]}
+                indexBy ={"mount"}
+                margin={{ top: 0, right: 110, bottom: 5, left: 60 }}
               />
             ) : (
-              <p>Loading</p>
+              <p>Awaiting Selection....</p>
             )}
           </Box>
         </Box>
@@ -334,5 +264,8 @@ const ClientDashboard = () => {
     </Box>
   );
 };
+
+// const MemoizedClientDashboard = React.memo(ClientDashboard);
+// export default MemoizedClientDashboard;
 
 export default ClientDashboard;

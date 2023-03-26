@@ -33,6 +33,7 @@ public class Settings {
     public String shutdownCommand = "";
     public String nutDevice = "";
     public boolean sendDiskInfo = false;
+    public int cpuMonitorPeriod = 2000;
 
     public static Settings get(){
         if (instance == null) {
@@ -50,7 +51,9 @@ public class Settings {
         try (var fr = new FileReader(configFile)) {
             instance = yaml.readValue(fr, Settings.class);
         } catch (IOException e) {
-            // Add dialog
+            System.out.println("No config found, writing a default config to default.yaml");
+            System.out.println("Edit and rename/copy default.yaml to config.yaml to use.");
+            writeEmptyConfig();
             throw new RuntimeException(e);
         }
     }
@@ -67,6 +70,7 @@ public class Settings {
             throw new RuntimeException(e);
         }
     }
+
 
     @Override
     public String toString() {
@@ -93,6 +97,7 @@ public class Settings {
         sb.append(",\n shutdownCommand='").append(shutdownCommand).append('\'');
         sb.append(",\n nutDevice='").append(nutDevice).append('\'');
         sb.append(",\n sendDiskInfo=").append(sendDiskInfo);
+        sb.append(",\n cpuMonitorPeriod=").append(cpuMonitorPeriod);
         sb.append('}');
         return sb.toString();
     }

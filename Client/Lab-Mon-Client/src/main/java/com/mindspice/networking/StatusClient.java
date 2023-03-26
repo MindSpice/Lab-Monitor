@@ -15,12 +15,13 @@ import com.mindspice.util.Utils;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.Arrays;
 
 public class StatusClient {
     Client client = new Client();
     Settings settings = Settings.get();
 
-    public StatusClient() throws IOException {
+    public StatusClient() {
         var kryo = client.getKryo();
         kryo.register(double[].class);
         kryo.register(String[].class);
@@ -31,16 +32,6 @@ public class StatusClient {
         kryo.register(Update.class);
         kryo.register(DiskInfo.class);
         kryo.register(DiskInfo[].class);
-        client.start();
-        client.connect(5000, settings.statusHostAddr, settings.statusHostPort);
-        client.sendTCP(new Handshake(
-                settings.clientName,
-                SysInfo.getInstance().getSystemInfo(),
-                SysInfo.getInstance().getMACList().toArray(new String[0]),
-                settings.doWakeOnLan,
-                (settings.doShutDown && !settings.isNUTClient),
-                Settings.get().wakeUpThreshold)
-        );
 
         client.addListener(new Listener() {
             public void received(Connection connection, Object object) {
@@ -60,14 +51,16 @@ public class StatusClient {
                 }
             }
         });
+
+        client.start();
     }
 
-
-    public void reconnect() throws IOException {
-        if (client.isConnected()) {
-            return;
+    public boolean connect(){
+        try {
+            client.connect(5000, settings.statusHostAddr, settings.statusHostPort);
+        } catch (IOException e) {
+            return false;
         }
-        client.reconnect();
         client.sendTCP(new Handshake(
                 settings.clientName,
                 SysInfo.getInstance().getSystemInfo(),
@@ -76,7 +69,11 @@ public class StatusClient {
                 (settings.doShutDown && !settings.isNUTClient),
                 Settings.get().wakeUpThreshold)
         );
+
+        return true;
     }
+
+
 
     public boolean isConnected() {
         return client.isConnected();

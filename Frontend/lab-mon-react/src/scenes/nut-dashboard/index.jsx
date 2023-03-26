@@ -1,37 +1,122 @@
-import { Box, Typography, useTheme } from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { tokens } from "../../theme";
-import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
-import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
-import { useEffect, useState } from "react";
+import { Box } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import LineChart from "../../components/LineChart";
 import Header from "../../components/Header";
+import { historySize, apiEndpoint } from "../../settings";
+
+const nutObj = {
+  lastTime: -1,
+  voltageIn: [],
+  voltageOut: [],
+  power: [],
+  load: [],
+  charge: [],
+  runtime: [],
+  temperature: [],
+  online: [],
+};
 
 const NutDashboard = () => {
-  const theme = useTheme();
-  const [nutData, setNutData] = useState([]);
+  const [nutData, setNutData] = useState(nutObj);
   const [isViewLoaded, setViewLoaded] = useState(false);
 
-  useEffect(() => {
-    const fetchNutData = async () => {
-      const response = await fetch("http://127.0.0.1:7568/nut_full");
+
+  const updateNutData = useCallback(
+    (newData) => {
+
+      if (newData.lastTime <= nutData.lastTime) {
+        return;
+      }
+
+      const updatedData = { ...nutData };
+
+      if (updatedData.lastTime < 0) {
+        updatedData.voltageIn = newData.voltageIn;
+        updatedData.voltageOut = newData.voltageOut;
+        updatedData.power = newData.power;
+        updatedData.load = newData.load;
+        updatedData.charge = newData.charge;
+        updatedData.runtime = newData.runtime;
+        updatedData.temperature = newData.temperature;
+        updatedData.online = newData.online;
+      } else {
+        updatedData.voltageIn[0].data = updatedData.voltageIn[0].data.slice(-historySize - 1);
+        updatedData.voltageIn[0].data.push(newData.voltageIn[0].data[0]);
+
+        updatedData.voltageOut[0].data = updatedData.voltageOut[0].data.slice(-historySize - 1);
+        updatedData.voltageOut[0].data.push(newData.voltageOut[0].data[0]);
+
+        updatedData.power[0].data = updatedData.power[0].data.slice(-historySize - 1);
+        updatedData.power[0].data.push(newData.power[0].data[0]);
+
+        updatedData.load[0].data = updatedData.load[0].data.slice(-historySize - 1);
+        updatedData.load[0].data.push(newData.load[0].data[0]);
+
+        updatedData.charge[0].data = updatedData.charge[0].data.slice(-historySize - 1);
+        updatedData.charge[0].data.push(newData.charge[0].data[0]);
+
+        updatedData.runtime[0].data = updatedData.runtime[0].data.slice(-historySize - 1);
+        updatedData.runtime[0].data.push(newData.runtime[0].data[0]);
+
+        updatedData.temperature[0].data = updatedData.temperature[0].data.slice(-historySize - 1);
+        updatedData.temperature[0].data.push(newData.temperature[0].data[0]);
+
+        updatedData.online[0].data = updatedData.online[0].data.slice(-historySize - 1);
+        updatedData.online[0].data.push(newData.online[0].data[0]);
+      }
+      
+      updatedData.lastTime = newData.lastTime;
+      setNutData(updatedData);
+    },
+    [nutData]
+  );
+
+
+  const fetchNutData = useCallback(async () => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
+    try {
+      const response =
+        nutData.lastTime < 0
+          ? await fetch(apiEndpoint + "/nut_full_all", {
+              signal,
+            })
+          : await fetch(apiEndpoint + "/nut_full", {
+              signal,
+            });
+
       const data = await response.json();
       if (response.status === 200) {
-        setNutData(data);
+        updateNutData(data);
         setViewLoaded(true);
-      } else {
-        setViewLoaded(false);
       }
+    } catch (error) {
+      if (error.name === "AbortError") {
+        console.log("Fetch request aborted");
+      } else {
+        console.error("Fetch failed:", error);
+      }
+    }
+    return () => {
+      abortController.abort();
     };
+  }, [nutData.lastTime, updateNutData]);
 
+
+  useEffect(() => {
     fetchNutData();
+  }, [fetchNutData]);
 
+
+  useEffect(() => {
     const interval = setInterval(() => {
       fetchNutData();
     }, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchNutData]);
+
 
   return (
     <Box m="5px" textAlign="center">

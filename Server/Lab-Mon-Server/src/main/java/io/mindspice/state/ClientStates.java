@@ -1,6 +1,7 @@
 package io.mindspice.state;
 
 import com.esotericsoftware.kryonet.Connection;
+import io.mindspice.data.ClientBarData;
 import io.mindspice.data.FullClientData;
 import io.mindspice.data.BriefClientData;
 import io.mindspice.networking.packets.Handshake;
@@ -17,12 +18,14 @@ public class ClientStates {
     private ClientStates() {
     }
 
+
     public static ClientStates get() {
         if (instance == null) {
             instance = new ClientStates();
         }
         return instance;
     }
+
 
     public void addClient(Connection connection, Handshake handshake) {
         var client = clients.get(handshake.name);
@@ -33,6 +36,7 @@ public class ClientStates {
         }
     }
 
+
     public void addClientData(String name, NetInfo data) {
         var client = clients.get(name);
         if (client == null) {
@@ -41,6 +45,7 @@ public class ClientStates {
             client.addData(data);
         }
     }
+
 
     public FullClientData getClientData(String name, boolean fullList) {
         var client = clients.get(name);
@@ -51,6 +56,18 @@ public class ClientStates {
         }
     }
 
+
+    public List<ClientBarData> getClientBarData() {
+        var clients = getClients();
+        var barData = new ArrayList<ClientBarData>(clients.size() * 3);
+
+        for (var client : clients) {
+            barData.add(client.getBarData());
+        }
+        return barData;
+    }
+
+
     public boolean isClientConnected(String name) {
         var client = clients.get(name);
         if (client == null) {
@@ -60,9 +77,11 @@ public class ClientStates {
         }
     }
 
+
     public List<ClientState> getClients() {
         return new ArrayList<>(clients.values());
     }
+
 
     public List<BriefClientData> getClientsOverview() {
         var clientData = new ArrayList<BriefClientData>(clients.size());
@@ -71,6 +90,7 @@ public class ClientStates {
         }
         return clientData;
     }
+
 
     public List<ClientState> getOfflineClients() {
         var offlineClients = new ArrayList<ClientState>();

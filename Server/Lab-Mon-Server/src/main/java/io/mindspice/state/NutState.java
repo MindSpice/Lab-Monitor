@@ -4,6 +4,7 @@ import io.mindspice.Settings;
 import io.mindspice.data.FullNutData;
 import io.mindspice.data.LinePoint;
 import io.mindspice.data.NutData;
+import io.mindspice.data.NutRadialData;
 
 import java.awt.*;
 import java.time.LocalDate;
@@ -58,13 +59,17 @@ public class NutState {
     }
 
     public List<String> getInfoList() {
-        return infoList;
+        var info = new ArrayList<>(infoList);
+        Collections.sort(info);
+        return info;
     }
 
 
     public FullNutData getFullData(boolean fullList) {
         var data = fullList ? new ArrayList<>(nutData) : Collections.singletonList(nutData.peekLast());
-        if (data.isEmpty()) { return null; }
+        if (data.isEmpty()) {
+            return null;
+        }
 
         var voltageIn = new LinePoint[]{new LinePoint("Input Voltage")};
         var voltageOut = new LinePoint[]{new LinePoint("Output Voltage")};
@@ -77,14 +82,14 @@ public class NutState {
 
         LocalTime lastTime = null;
         for (var dp : data) {
-            if (lastTime == null){
+            if (lastTime == null) {
                 lastTime = dp.time();
             } else {
-               if (!(SECONDS.between(lastTime, dp.time()) >= Settings.get().dashboardInterval)) {
-                   continue;
-               } else {
-                   lastTime = dp.time();
-               }
+                if (!(SECONDS.between(lastTime, dp.time()) >= Settings.get().dashboardInterval)) {
+                    continue;
+                } else {
+                    lastTime = dp.time();
+                }
             }
 
             var time = dp.time().truncatedTo(MINUTES).toString();
@@ -109,12 +114,28 @@ public class NutState {
                 temperature,
                 online
         );
+    }
 
+
+    public NutRadialData getRadialData() {
+        var data = nutData.peekLast();
+        if (data == null) {
+            return null;
+        }
+
+        return new NutRadialData(
+                data.online(),
+                data.testResult(),
+                new NutRadialData.RadialData[]{
+                        new NutRadialData.RadialData("charge", "", (int) data.charge()),
+                        new NutRadialData.RadialData("discharge", "", 100 - (int) data.charge())
+                }
+        );
     }
 
 
     public NutData getRecentData() {
-       return nutData.peekLast();
+        return nutData.peekLast();
     }
 
     public double getCharge() {

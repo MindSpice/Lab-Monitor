@@ -1,9 +1,5 @@
 package io.mindspice.data;
 
-
-
-import java.text.DecimalFormat;
-
 public class DiskInfo {
     public String volume;
     public String mount;

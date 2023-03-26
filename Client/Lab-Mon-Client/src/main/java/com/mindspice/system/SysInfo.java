@@ -25,11 +25,12 @@ public class SysInfo {
             SYS_INFO.getOperatingSystem().getVersionInfo().toString();
 
 
+
     private SysInfo(){
-        new Thread(() -> {
+       new Thread(() -> {
             while (true) {
                 try {
-                    cpuLoad = CPU.getProcessorCpuLoad(2000);
+                    cpuLoad = CPU.getProcessorCpuLoad(Settings.get().cpuMonitorPeriod);
                 } catch (Exception ignored) {
                     // Ignored, should never happen.
                     // Though if issues arise, might be good to re-init the SystemInfo hook
@@ -38,6 +39,7 @@ public class SysInfo {
         }).start();
     }
 
+
     public static SysInfo getInstance() {
         if (instance == null) {
             instance = new SysInfo();
@@ -45,17 +47,21 @@ public class SysInfo {
         return instance;
     }
 
+
     public String getSystemInfo() {
         return OS_VERSION;
     }
+
 
     public double[] getCoreSpeeds() {
         return Utils.hzToGhz(CPU.getCurrentFreq());
     }
 
+
     public double getAvgCoreSpeed() {
         return Utils.hzToGhz(Arrays.stream(CPU.getCurrentFreq()).average().orElse(0.0));
     }
+
 
     public double[] getMemoryUsage() {
         return new double[]{
@@ -64,6 +70,7 @@ public class SysInfo {
         };
     }
 
+
     public double[] getSwapUsage() {
         return new double[]{
                 Utils.bytesToGB(MEMORY.getVirtualMemory().getSwapUsed()),
@@ -71,29 +78,36 @@ public class SysInfo {
         };
     }
 
+
     public double getTotalCoreUsage() {
         return  Arrays.stream(cpuLoad).average().orElse(0.0);
     }
+
 
     public double[] getCoreUsage() {
         return cpuLoad;
     }
 
+
     public int getThreadCount() {
         return SYS_INFO.getOperatingSystem().getThreadCount();
     }
+
 
     public int getProcessCount() {
         return SYS_INFO.getOperatingSystem().getProcessCount();
     }
 
+
     public double getCpuTemp() {
         return SYS_INFO.getHardware().getSensors().getCpuTemperature();
     }
 
+
     public List<String> getMACList() {
         return HW_LAYER.getNetworkIFs().stream().map(NetworkIF::getMacaddr).toList();
     }
+
 
     public DiskInfo[] getDiskInfo() {
         var disks = SYS_INFO.getOperatingSystem().getFileSystem().getFileStores();
@@ -108,6 +122,7 @@ public class SysInfo {
         }
         return diskInfo;
     }
+
 
     public NetInfo getNetInfo() {
         return new NetInfo(

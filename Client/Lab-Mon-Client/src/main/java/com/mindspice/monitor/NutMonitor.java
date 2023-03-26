@@ -7,6 +7,7 @@ import com.mindspice.jnut.NutException;
 import com.mindspice.util.Utils;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public class NutMonitor implements Runnable {
     private Client client;
@@ -17,9 +18,18 @@ public class NutMonitor implements Runnable {
         connect();
     }
 
-    private void connect() throws IOException, NutException {
-        client = new Client(settings.nutHostAddr, settings.nutHostPort, settings.nutUser, settings.nutPass);
-        device = client.getDevice(Settings.get().nutDevice);
+    public boolean connect() {
+        try {
+            client = new Client(settings.nutHostAddr, settings.nutHostPort, settings.nutUser, settings.nutPass);
+            device = client.getDevice(Settings.get().nutDevice);
+        } catch (IOException  | NutException e) {
+            System.out.println("Error Make Nut Host, Or Device Connection:" + Arrays.toString(e.getStackTrace()));
+        }
+        return client.isConnected();
+    }
+
+    public boolean isConnected() {
+        return client.isConnected();
     }
 
     @Override

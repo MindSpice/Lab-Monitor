@@ -26,7 +26,6 @@ const LineChart = ({
     return arr;
   };
 
-
   return (
     <ResponsiveLine
       data={data}

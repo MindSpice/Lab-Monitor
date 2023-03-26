@@ -14,5 +14,6 @@ public record NutData(
         double outputVoltage,
         double temperature,
         String testResult,
-        LocalTime time) {
+        LocalTime time
+) {
 }
